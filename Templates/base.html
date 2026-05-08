@@ -1,0 +1,59 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Bank Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visual.css') }}" />
+  </head>
+  <body>
+    {% if session.get('user_id') %}
+      <div class="shell" >
+        <aside class="sidebar">
+          <center><div class="brand mini-user-box user-box">Finance Manager</div></center>
+          <br>
+
+          <div class="brand mini-user-box user-box">
+            <span><a href="{{ url_for('profile') }}">Account Name: {{ session.get('user_name') }}</a></span>
+          </div>
+
+          <nav class="nav">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('accounts') }}">Accounts</a>
+            <a href="{{ url_for('transactions') }}">Transactions</a>
+            <a href="{{ url_for('budgets') }}">Budgets</a>
+            <a href="{{ url_for('transfers') }}">Transfers</a>
+            <a href="{{ url_for('automatic_payments') }}">Auto Payments</a>
+            <a href="{{ url_for('credit') }}">Credit</a>
+            <a href="{{ url_for('investments') }}">Investments</a>
+            <a href="{{ url_for('activity') }}">Activity</a>
+          </nav>
+
+          {% if currency_summary %}
+            <div class="rate-box rate-box span, rate-box small, user-box ">
+              <center><strong>Live Currency</strong></center>
+              <span>$ = {{ exchange_rates.USD|money }}</span>
+              <span>€ = {{ exchange_rates.EUR|money }}</span>
+              <span>£ = {{ exchange_rates.GBP|money }}</span>
+              <span>¥ = {{ exchange_rates.JPY|money }}</span>
+            </div>
+          {% endif %}
+        </aside>
+        <main class="main">
+          <header class="topbar">
+            <div>
+              <h1>{% block title %}{% endblock %}</h1>
+              <p>{% block subtitle %}{% endblock %}</p>
+            </div>
+            <a class="btn secondary" href="{{ url_for('logout') }}">Logout</a>
+          </header>
+          {% include '_messages.html' %}
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    {% else %}
+      {% include '_messages.html' %}
+      {% block auth %}{% endblock %}
+    {% endif %}
+  </body>
+</html>
