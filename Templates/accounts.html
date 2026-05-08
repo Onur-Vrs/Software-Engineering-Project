@@ -1,0 +1,80 @@
+﻿{% extends "base.html" %}
+{% block title %}Accounts{% endblock %}
+{% block subtitle %}Create bank, cash, credit card, deposit, and investment accounts in foreign currency.{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Create Account</h2>
+  <form method="post" class="form five" >
+    <input type="hidden" name="action" value="create" />
+    <label>Name <input name="name" required placeholder="Salary Account" /></label>
+    <label>Type <select name="type" id="accountType">{% for t in account_types %}<option>{{ t }}</option>{% endfor %}</select></label>
+    <label>Currency <select name="currency">{% for c in currencies %}<option>{{ c }}</option>{% endfor %}</select></label>
+    <label>Opening Balance <input name="balance" type="number" step="0.01" min="0" value="0" /></label>
+    <label id="creditLimitField">Credit Limit <input name="credit_limit" type="number" step="0.01" min="0" value="0" /></label>
+    <button class="btn">Create</button>
+  </form>
+</div>
+<div class="card mt" >
+  <h2>Account List</h2>
+  <div class="account-grid">
+    {% for a in accounts %}
+      <article class="account-tile">
+        <span>{{ a.type }}</span>
+        <h3>{{ a.name }}</h3>
+        <strong>{{ a.balance|money(a.currency) }}</strong>
+        <small>{{ a.currency }} account</small>
+        <small>Value: {{ ((a.balance * exchange_rates[a.currency]) / exchange_rates.USD)|money('USD') }} / {{ ((a.balance * exchange_rates[a.currency]) / exchange_rates.EUR)|money('EUR') }}</small>
+        {% if a.type == 'Credit Card' %}
+          <small>Used: {{ a.used_credit|money(a.currency) }} / {{ a.credit_limit|money(a.currency) }}</small>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+</div>
+<div class="card mt">
+  <h2>Account Settings</h2>
+  <div class="payment-list">
+    {% for a in accounts %}
+      <form method="post" class="payment-editor account-editor">
+        <input type="hidden" name="action" value="update" />
+        <input type="hidden" name="account_id" value="{{ a.id }}" />
+        <label>Name <input name="name" required value="{{ a.name }}" /></label>
+        <label>Type
+          <select name="type" class="edit-account-type">
+            {% for t in account_types %}<option {% if t == a.type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Currency
+          <select name="currency">
+            {% for c in currencies %}<option {% if c == a.currency %}selected{% endif %}>{{ c }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Balance <input name="balance" type="number" step="0.01" value="{{ '%.2f'|format(a.balance) }}" /></label>
+        <label class="edit-credit-limit">Credit Limit <input name="credit_limit" type="number" step="0.01" min="0" value="{{ '%.2f'|format(a.credit_limit) }}" /></label>
+        <div class="actions">
+          <button class="btn secondary" name="action" value="update">Update Account</button>
+          <button class="btn danger" name="action" value="delete">Delete</button>
+        </div>
+      </form>
+    {% endfor %}
+  </div>
+</div>
+<script>
+  const accountType = document.getElementById("accountType");
+  const creditLimitField = document.getElementById("creditLimitField");
+  function toggleCreditLimit() {
+    creditLimitField.style.display = accountType.value === "Credit Card" ? "grid" : "none";
+  }
+  accountType.addEventListener("change", toggleCreditLimit);
+  toggleCreditLimit();
+  document.querySelectorAll(".account-editor").forEach((form) => {
+    const type = form.querySelector(".edit-account-type");
+    const limit = form.querySelector(".edit-credit-limit");
+    function toggleEditLimit() {
+      limit.style.display = type.value === "Credit Card" ? "grid" : "none";
+    }
+    type.addEventListener("change", toggleEditLimit);
+    toggleEditLimit();
+  });
+</script>
+{% endblock %}
