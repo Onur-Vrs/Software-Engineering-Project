@@ -1,0 +1,27 @@
+﻿{% extends "base.html" %}
+{% block title %}Budgets{% endblock %}
+{% block subtitle %}Set monthly category limits and monitor spending percentage.{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Set Budget</h2>
+  <form method="post" class="form four">
+    <label>Month <input name="month" type="month" required value="{{ month }}" /></label>
+    <label>Category <select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select></label>
+    <label>Limit Amount <input name="limit_amount" type="number" min="1" step="0.01" required /></label>
+    <button class="btn">Save Budget</button>
+  </form>
+</div>
+<div class="card mt">
+  <h2>This Month</h2>
+  {% if budgets %}
+    {% for budget in budgets %}
+      <div class="budget-line">
+        <div class="row"><strong>{{ budget.category }}</strong><span>{{ budget.percent }}%</span></div>
+        <div class="progress {{ budget.status }}"><span style="width: {{ budget.percent }}%"></span></div>
+        <small>{{ budget.spent|money }} spent from {{ budget.limit|money }}</small>
+        {% if budget.raw_percent >= 100 %}<div class="budget-warning">Budget exceeded.</div>{% endif %}
+      </div>
+    {% endfor %}
+  {% else %}<p class="empty">No budgets set.</p>{% endif %}
+</div>
+{% endblock %}
