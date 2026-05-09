@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block subtitle %}Change your account name, customer ID, or password.{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Profile Settings</h2>
+  <form method="post" class="form four">
+    <label>Account Name <input name="name" required value="{{ user.name }}" /></label>
+    <label>Customer ID <input name="customer_number" required value="{{ user.customer_number }}" /></label>
+    <label>New Password <input name="new_password" type="password" placeholder="Leave blank to keep current password" /></label>
+    <button class="btn">Save Settings</button>
+  </form>
+</div>
+{% endblock %}
