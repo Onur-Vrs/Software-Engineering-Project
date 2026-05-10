@@ -1,0 +1,21 @@
+﻿{% extends "base.html" %}
+{% block auth %}
+<section class="login">
+  <div class="card login-card">
+    <h1>Finance Manager</h1>
+    <p>Create a new personal banking customer.</p>
+    <div class="auth-tabs">
+      <a href="{{ url_for('signin') }}">Sign In</a>
+      <a class="active" href="{{ url_for('signup') }}">Sign Up</a>
+      <a href="{{ url_for('forgot_password') }}">Forgot Password</a>
+    </div>
+    <form method="post" class="stack">
+      <label>Name <input name="name" required placeholder="Your name" /></label>
+      <label>Customer Number / PIN <input name="customer_number" required type="number" min="1" placeholder="Example: 1234" /></label>
+      <label>Password <input name="password" required type="password" /></label>
+      <label>Security Answer <input name="security_answer" required placeholder="What do you like (Something or Someone)" /></label>
+      <button class="btn">Create Account</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

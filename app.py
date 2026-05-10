@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev-secret-change-later"
-DATABASE = "banking.db"
+DATABASE = "informations.db"
 
 EXPENSE_CATEGORIES = ["Food", "Rent", "Transport", "Bills", "Health", "Education", "Shopping", "Entertainment", "Credit" , "Credit Card" , "Other"]
 INCOME_CATEGORIES =["Salary", "Rent Income", "Retired Salary", "Exchange"]
@@ -303,3 +303,63 @@ def init_db():
     add_column_if_missing("recurring_payments", "remaining_runs", "INTEGER")
     add_column_if_missing("recurring_payments", "credit_id", "INTEGER")
     execute("UPDATE credits SET remaining_balance = total_repayment WHERE remaining_balance = 0")
+
+    @app.route("/")
+    def login():
+        return redirect(url_for("signin"))
+
+
+    @app.route("/signin", methods=["GET", "POST"])
+    def signin():
+        if request.method == "POST":
+            customer_number = request.form.get("customer_number", "").strip()
+            password = request.form.get("password", "")
+            user_row = query_one("SELECT * FROM users WHERE customer_number = ?", (customer_number,))
+            if user_row and user_row["password_hash"] and check_password_hash(user_row["password_hash"], password):
+                session["user_id"] = user_row["id"]
+                session["user_name"] = user_row["name"]
+                return redirect(url_for("dashboard"))
+            flash("Wrong customer number or password.", "danger")
+            return redirect(url_for("signin"))
+        return render_template("login.html")
+
+
+    @app.route("/signup", methods=["GET", "POST"])
+    def signup():
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            customer_number = request.form.get("customer_number", "").strip()
+            password = request.form.get("password", "")
+            security_answer = request.form.get("security_answer", "").strip().lower()
+            if not name or not customer_number or not password or not security_answer:
+                flash("All fields are required.", "danger")
+                return redirect(url_for("signup"))
+            if query_one("SELECT id FROM users WHERE customer_number = ?", (customer_number,)):
+                flash("This customer number already exists.", "danger")
+                return redirect(url_for("signup"))
+            user_id = execute(
+                "INSERT INTO users (name, customer_number, password_hash, security_answer) VALUES (?, ?, ?, ?)",
+                (name, customer_number, generate_password_hash(password), security_answer),
+            ).lastrowid
+            session["user_id"] = user_id
+            session["user_name"] = name
+            execute("INSERT INTO accounts (user_id, name, type, balance, currency) VALUES (?, 'Main TRY Account', 'Bank', 0, 'TRY')", (user_id,))
+            add_activity("Created customer profile with TRY, USD, and EUR accounts")
+            return redirect(url_for("dashboard"))
+        return render_template("signup.html")
+
+
+    @app.route("/forgot-password", methods=["GET", "POST"])
+    def forgot_password():
+        if request.method == "POST":
+            customer_number = request.form.get("customer_number", "").strip()
+            security_answer = request.form.get("security_answer", "").strip().lower()
+            new_password = request.form.get("new_password", "")
+            user_row = query_one("SELECT * FROM users WHERE customer_number = ?", (customer_number,))
+            if not user_row or user_row["security_answer"] != security_answer:
+                flash("Customer number or security answer is wrong.", "danger")
+                return redirect(url_for("forgot_password"))
+            execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(new_password), user_row["id"]))
+            flash("Password changed. You can sign in now.", "success")
+            return redirect(url_for("signin"))
+        return render_template("forgot_password.html")
