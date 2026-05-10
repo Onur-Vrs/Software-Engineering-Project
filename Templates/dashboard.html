@@ -1,0 +1,43 @@
+﻿{% extends "base.html" %}
+{% block title %}Monthly Summary{% endblock %}
+{% block subtitle %}TL balance, monthly profit, credit card usage, and budget status.{% endblock %}
+{% block content %}
+<section class="metrics">
+  {% for row in balances %}
+    <div class="card metric"><span>{{ row.currency }} Balance</span><strong>{{ row.total|money(row.currency) }}</strong></div>
+  {% endfor %}
+  <div class="card metric"><span>TRY Monthly Income</span><strong>{{ income|money }}</strong></div>
+  <div class="card metric"><span>TRY Monthly Expenses</span><strong>{{ expenses|money }}</strong></div>
+  <div class="card metric"><span>Monthly Profit</span><strong class="{% if monthly_profit < 0 %}negative{% endif %}">{{ monthly_profit|money }}</strong></div>
+  <div class="card metric">
+    <span>Credit Card Debt</span>
+    <strong>{{ card_summary.used|money }} / {{ card_summary.limit_total|money }}</strong>
+    <small>spent / left</small>
+  </div>
+</section>
+<section class="grid two mt">
+  <div class="card">
+    <h2>Budget Status</h2>
+    {% if budgets %}
+      {% for budget in budgets %}
+        <div class="budget-line">
+          <div class="row"><strong>{{ budget.category }}</strong><span>{{ budget.percent }}%</span></div>
+          <div class="progress {{ budget.status }}"><span style="width: {{ budget.percent }}%"></span></div>
+          <small>{{ budget.spent|money }} spent from {{ budget.limit|money }}</small>
+          {% if budget.raw_percent >= 100 %}<div class="budget-warning">Budget exceeded.</div>{% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No budget records for this month.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2>Recent Activity</h2>
+    {% if activities %}
+      <table><tbody>{% for a in activities %}<tr><td>{{ a.created_at }}</td><td>{{ a.message }}</td></tr>{% endfor %}</tbody></table>
+    {% else %}
+      <p class="empty">No activity yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

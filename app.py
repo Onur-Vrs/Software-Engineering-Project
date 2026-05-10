@@ -363,3 +363,28 @@ def init_db():
             flash("Password changed. You can sign in now.", "success")
             return redirect(url_for("signin"))
         return render_template("forgot_password.html")
+    
+    @app.route("/dashboard")
+    def dashboard():
+        if not require_user():
+            return redirect(url_for("signin"))
+        month = date.today().strftime("%Y-%m")
+        income = query_one("SELECT COALESCE(SUM(amount), 0) total FROM transactions WHERE user_id = ? AND type = 'Income' AND currency = 'TRY' AND substr(transaction_date, 1, 7) = ?", (current_user_id(), month))["total"]
+        expenses = query_one("SELECT COALESCE(SUM(amount), 0) total FROM transactions WHERE user_id = ? AND type = 'Expense' AND currency = 'TRY' AND substr(transaction_date, 1, 7) = ?", (current_user_id(), month))["total"]
+        balances = query_all("SELECT currency, COALESCE(SUM(balance), 0) total FROM accounts WHERE user_id = ? AND currency = 'TRY' GROUP BY currency ORDER BY currency", (current_user_id(),))
+        card_summary = query_one("SELECT COALESCE(SUM(used_credit), 0) used, COALESCE(SUM(credit_limit), 0) limit_total FROM accounts WHERE user_id = ? AND type = 'Credit Card'", (current_user_id(),))
+        activities = query_all("SELECT * FROM activities WHERE user_id = ? ORDER BY id DESC LIMIT 6", (current_user_id(),))
+        budgets = budget_status(month)
+        monthly_profit = float(income) - float(expenses)
+        return render_template("dashboard.html", income=income, expenses=expenses, balances=balances, card_summary=card_summary, monthly_profit=monthly_profit, activities=activities, budgets=budgets)
+
+    def budget_status(month):
+        budgets = query_all("SELECT * FROM budgets WHERE user_id = ? AND month = ? ORDER BY category", (current_user_id(), month))
+        result = []
+        for budget in budgets:
+            spent = monthly_category_spending(budget["category"], month)
+            limit_amount = float(budget["limit_amount"])
+            raw_percent = round((spent / limit_amount) * 100)
+            status = "danger" if raw_percent >= 100 else "warning" if raw_percent >= 80 else "safe"
+            result.append({"category": budget["category"], "month": month, "spent": spent, "limit": limit_amount, "percent": min(100, raw_percent), "raw_percent": raw_percent, "status": status})
+        return result
