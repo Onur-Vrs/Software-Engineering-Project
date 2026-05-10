@@ -23,7 +23,7 @@
         <h3>{{ a.name }}</h3>
         <strong>{{ a.balance|money(a.currency) }}</strong>
         <small>{{ a.currency }} account</small>
-        <small>Value: {{ ((a.balance * exchange_rates[a.currency]) / exchange_rates.USD)|money('USD') }} / {{ ((a.balance * exchange_rates[a.currency]) / exchange_rates.EUR)|money('EUR') }}</small>
+        <small>Value: {{ ((a.balance * exchange_rates[a.currency]) / exchange_rates.TRY)|money('TRY') }}</small>
         {% if a.type == 'Credit Card' %}
           <small>Used: {{ a.used_credit|money(a.currency) }} / {{ a.credit_limit|money(a.currency) }}</small>
         {% endif %}
