@@ -26,6 +26,8 @@ button, input, select { font: inherit; }
 
 .brand { color: #000000; font-size: 21px; font-weight: 900; line-height: 1.15; margin-bottom: 16px; letter-spacing: 0; }
 
+.sidebar-logo { display: block; width: 100%; max-width: 150px; height: auto; margin: 0 auto; }
+
 .user-box { border: 1px solid rgba(255,255,255,.42); border-radius: 10px; padding: 15px; margin-bottom: 17px; color: #ffffff; display: grid; gap: 8px; }
 
 .rate-box { margin-top: auto; margin-bottom: 0; }
