@@ -1,0 +1,42 @@
+﻿{% extends "base.html" %}
+{% block title %}Investments{% endblock %}
+{% block subtitle %}Buy gold, silver or foreign while tracking profit or loss.{% endblock %}
+{% block content %}
+<div class="card mt">
+  <h2>Investment Accounts</h2>
+
+  <div class="account-grid">
+    {% for a in accounts %}
+      {% if a.type == 'Investment' %}
+        <article class="account-tile">
+          <span>{{ a.type }}</span>
+          <h3>{{ a.name }}</h3>
+          <strong>{{ a.balance|money(a.currency) }}</strong>
+          <small>{{ a.currency }} account</small>
+          <small>
+            Value:
+            {{ ((a.balance * exchange_rates[a.currency]) / exchange_rates.TRY)|money('TRY') }}
+          </small>
+        </article>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+  <h2>Buy Asset</h2>
+  <form method="post" class="form four">
+    <label>Pay From <select name="from_account_id">{% for a in accounts %}<option value="{{ a.id }}">{{ a.name }} - {{ a.balance|money(a.currency) }}</option>{% endfor %}</select></label>
+    <label>To <select name="to_account_id">{% for a in accounts %}<option value="{{ a.id }}">{{ a.name }} - {{ a.balance|money(a.currency) }}</option>{% endfor %}</select></label>
+    <label>Asset <select name="asset">{% for name, price in assets.items() %}<option>{{ name }}</option>{% endfor %}</select></label>
+    <label>Quantity <input name="quantity" required type="number" min="0.01" step="0.01" /></label>
+    <button class="btn">Buy</button>
+  </form>
+</div>
+
+<div class="card mt">
+  <h2>Portfolio</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Asset</th><th>Quantity</th><th>Buy Price</th><th>Current Price</th><th>Profit / Loss</th></tr></thead>
+    <tbody>{% for i in investments %}<tr><td>{{ i.investment_date }}</td><td>{{ i.asset }}</td><td>{{ i.quantity }}</td><td>{{ i.buy_price|money }}</td><td>{{ assets[i.asset]|money }}</td><td>{{ ((assets[i.asset] - i.buy_price) * i.quantity)|money }}</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% endblock %}
