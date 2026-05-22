@@ -54,4 +54,33 @@ class FinanceTests(unittest.TestCase):
         self.database_patch.stop()
         self.temp_dir.cleanup()
 
-    
+    def create_user(self, user_id=1, customer_number="1001"):
+        database.execute(
+            "INSERT INTO users (id, name, customer_number) VALUES (?, ?, ?)",
+            (user_id, f"User {user_id}", customer_number),
+        )
+
+    def create_account(self, user_id=1, name="Main", account_type="Bank", balance=1000, currency="TRY"):
+        return database.execute(
+            """
+            INSERT INTO accounts (user_id, name, type, balance, currency)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (user_id, name, account_type, balance, currency),
+        ).lastrowid
+
+    def test_convert_currency_uses_configured_exchange_rates(self):
+        self.assertAlmostEqual(finance.convert_currency(2, "USD", "TRY"), 90.34)
+        self.assertAlmostEqual(finance.convert_currency(45.17, "TRY", "USD"), 1.0)
+
+    def test_currency_summary_totals_only_signed_in_users_accounts(self):
+        self.create_user(1, "1001")
+        self.create_user(2, "1002")
+        self.create_account(user_id=1, name="Cash TRY", balance=100, currency="TRY")
+        self.create_account(user_id=1, name="Cash USD", balance=2, currency="USD")
+        self.create_account(user_id=2, name="Other User Cash", balance=5000, currency="TRY")
+
+        summary = finance.currency_summary()
+
+        self.assertAlmostEqual(summary["total_try"], 190.34)
+        self.assertAlmostEqual(summary["total_usd"], 190.34 / 45.17)
